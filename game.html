@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu de Planète - Partie</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- Menu à gauche -->
+        <div class="left-menu">
+            <button class="menu-btn" onclick="showSection('planet')">Ma planète</button>
+            <button class="menu-btn" onclick="showSection('resources')">Ressources</button>
+            <button class="menu-btn" onclick="showSection('quest')">Quête</button>
+            <button class="menu-btn locked" disabled>🔒 Attaque</button>
+            <button class="menu-btn" onclick="showSection('defense')">Défense</button>
+            <button class="menu-btn" onclick="showSection('workers')">Travailleurs</button>
+            <button class="menu-btn locked" disabled>🔒 Voir une autre planète</button>
+        </div>
+
+        <!-- Écran central -->
+        <div class="main-screen">
+            <div class="planet-view">
+                <h2>Ma Planète</h2>
+                <div class="planet-circle"></div>
+                
+                <div class="stats">
+                    <p>⚡ Énergie: <span id="energy">0</span></p>
+                    <p>🔩 Métal: <span id="metal">0</span></p>
+                    <p>💎 Cristal: <span id="crystal">0</span></p>
+                    <p>🛡️ Bouclier: <span id="shield">0</span>%</p>
+                </div>
+            </div>
+
+            <!-- Section Quête -->
+            <div id="quest" class="section hidden">
+                <h2>Quêtes</h2>
+                <div class="quest-box">
+                    <h3>🎯 Quête: Première récolte</h3>
+                    <p>Objectif: Obtenir 10 métal</p>
+                    <p>Progrès: <span id="quest-progress">0</span>/10 métal</p>
+                    <div id="quest-reward" style="display: none;">
+                        <p style="color: #00ff88;">✅ Quête terminée!</p>
+                        <div class="chest" onclick="openChest()">
+                            <div class="chest-icon">📦</div>
+                            <p>Coffre en bois</p>
+                            <p style="font-size: 0.9rem;">Cliquez pour ouvrir</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section Ressources -->
+            <div id="resources" class="section hidden">
+                <h2>Ressources</h2>
+                <div class="resource-info">
+                    <p>⚡ Énergie: <span id="energy-display">0</span></p>
+                    <p>🔩 Métal: <span id="metal-display">0</span></p>
+                    <p>💎 Cristal: <span id="crystal-display">0</span></p>
+                </div>
+                <button onclick="collectResources()">Collecter des ressources</button>
+            </div>
+
+            <!-- Section Attaque -->
+            <div id="attack" class="section hidden">
+                <h2>Attaque</h2>
+                <p>Choisissez votre type d'attaque:</p>
+                <button onclick="launchAttack('laser')">Attaque Laser (Coût: 50 énergie)</button>
+                <button onclick="launchAttack('missile')">Missile (Coût: 100 métal)</button>
+                <p id="attack-message"></p>
+            </div>
+
+            <!-- Section Défense -->
+            <div id="defense" class="section hidden">
+                <h2>Défense</h2>
+                <p>Bouclier actuel: <span id="shield-display">0</span>%</p>
+                <button onclick="upgradeShield()">Améliorer le bouclier (Coût: 200 cristal)</button>
+                <p id="defense-message"></p>
+            </div>
+
+            <!-- Section Travailleurs -->
+            <div id="workers" class="section hidden">
+                <h2>Travailleurs</h2>
+                <p>Travailleurs actifs: <span id="worker-count">0</span></p>
+                <div id="free-worker-offer">
+                    <button onclick="hireFreeWorker()" id="free-worker-btn">Embaucher 1er travailleur (Gratuit - 0$)</button>
+                    <p id="worker-timer" style="display: none;">Attente: <span id="timer-seconds">5</span>s...</p>
+                </div>
+                <button onclick="hireWorker()" style="display: none;" id="regular-worker-btn">Embaucher travailleur (Coût: 50 métal)</button>
+                <p id="worker-message"></p>
+            </div>
+
+            <!-- Section Autre Planète -->
+            <div id="other-planet" class="section hidden">
+                <h2>Planètes ennemies</h2>
+                <div class="planet-list">
+                    <div class="enemy-planet">
+                        <h3>Planète Alpha</h3>
+                        <p>🛡️ Bouclier: 80%</p>
+                        <button onclick="attackPlanet('alpha')">Attaquer</button>
+                    </div>
+                    <div class="enemy-planet">
+                        <h3>Planète Beta</h3>
+                        <p>🛡️ Bouclier: 60%</p>
+                        <button onclick="attackPlanet('beta')">Attaquer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
