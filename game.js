@@ -6,12 +6,14 @@ let gameState = {
     shield: 0,
     workers: 0,
     questCompleted: false,
-    chestOpened: false
+    chestOpened: false,
+    defenseUnlocked: false
 };
 
 // Charger l'état du jeu
 function loadGameState() {
-    // Ne pas charger les anciennes données - toujours recommencer à 0
+    // Effacer les anciennes données et recommencer à zéro
+    localStorage.removeItem('planetGameState');
     updateDisplay();
 }
 
@@ -39,6 +41,20 @@ function updateDisplay() {
     if (crystalDisplay) crystalDisplay.textContent = gameState.crystal;
     if (shieldDisplay) shieldDisplay.textContent = gameState.shield;
     if (workerCount) workerCount.textContent = gameState.workers;
+    
+    // Mettre à jour le bouclier dans la section défense
+    const shieldDisplayDefense = document.getElementById('shield-display-defense');
+    if (shieldDisplayDefense) shieldDisplayDefense.textContent = gameState.shield;
+    
+    // Mettre à jour le badge de défense
+    const defenseBadge = document.getElementById('defense-badge');
+    if (defenseBadge) {
+        if (gameState.defenseUnlocked && gameState.metal >= 40) {
+            defenseBadge.style.display = 'inline-block';
+        } else {
+            defenseBadge.style.display = 'none';
+        }
+    }
     
     // Mettre à jour la quête
     updateQuest();
@@ -144,6 +160,10 @@ function hireFreeWorker() {
             clearInterval(interval);
             gameState.workers = 1;
             gameState.metal += 10;
+            
+            // Débloquer la défense après le premier travailleur
+            gameState.defenseUnlocked = true;
+            
             updateDisplay();
             
             // Cacher l'offre gratuite
@@ -161,15 +181,45 @@ function hireFreeWorker() {
 // Embaucher un travailleur
 function hireWorker() {
     const messageEl = document.getElementById('worker-message');
+    const regularBtn = document.getElementById('regular-worker-btn');
+    const timerEl = document.getElementById('worker-timer-regular');
+    const timerSeconds = document.getElementById('timer-seconds-regular');
     
-    if (gameState.metal >= 50) {
-        gameState.metal -= 50;
-        gameState.workers += 1;
+    if (gameState.energy >= 50) {
+        gameState.energy -= 50;
         updateDisplay();
-        messageEl.textContent = '👷 Travailleur embauché! Total: ' + gameState.workers;
-        messageEl.style.color = '#00ff88';
+        
+        regularBtn.disabled = true;
+        regularBtn.style.opacity = '0.5';
+        timerEl.style.display = 'block';
+        messageEl.textContent = '';
+        
+        let countdown = 5;
+        timerSeconds.textContent = countdown;
+        
+        const interval = setInterval(() => {
+            countdown--;
+            timerSeconds.textContent = countdown;
+            
+            if (countdown <= 0) {
+                clearInterval(interval);
+                
+                gameState.workers += 1;
+                gameState.energy += 75;
+                gameState.metal += 20;
+                
+                updateDisplay();
+                
+                regularBtn.disabled = false;
+                regularBtn.style.opacity = '1';
+                timerEl.style.display = 'none';
+                
+                messageEl.textContent = '🎉 Travailleur embauché! +75 énergie +20 métal. Total: ' + gameState.workers;
+                messageEl.style.color = '#00ff88';
+            }
+        }, 1000);
     } else {
-        messageEl.textContent = '❌ Pas assez de métal!';
+        messageEl.textContent = '❌ Pas assez d\'énergie!';
         messageEl.style.color = '#ff0000';
     }
 }
@@ -191,38 +241,168 @@ function attackPlanet(planetName) {
 // Mettre à jour la quête
 function updateQuest() {
     const questProgress = document.getElementById('quest-progress');
-    const questReward = document.getElementById('quest-reward');
+    const claimBtn = document.getElementById('claim-quest-btn');
+    const questBadge = document.getElementById('quest-badge');
     
     if (questProgress) {
         questProgress.textContent = Math.min(gameState.metal, 10);
     }
     
-    if (questReward && !gameState.questCompleted && gameState.metal >= 10) {
-        gameState.questCompleted = true;
-        questReward.style.display = 'block';
+    // Afficher le badge de notification si on a 10 métal et que la quête n'est pas complétée
+    if (questBadge) {
+        if (gameState.metal >= 10 && !gameState.questCompleted && !gameState.chestOpened) {
+            questBadge.style.display = 'inline-block';
+        } else {
+            questBadge.style.display = 'none';
+        }
     }
+    
+    // Afficher le bouton Réclamer si on a 10 métal et que la quête n'est pas encore complétée
+    if (claimBtn && gameState.metal >= 10 && !gameState.questCompleted && !gameState.chestOpened) {
+        claimBtn.style.display = 'block';
+    } else if (claimBtn) {
+        claimBtn.style.display = 'none';
+    }
+    
+    // Afficher l'état final si le coffre a été ouvert
+    const chestOpened = document.getElementById('chest-opened');
+    if (chestOpened && gameState.chestOpened) {
+        document.getElementById('quest-reward').style.display = 'none';
+        chestOpened.style.display = 'block';
+    }
+}
+
+// Réclamer la quête
+function claimQuest() {
+    if (gameState.metal < 10 || gameState.questCompleted) return;
+    
+    gameState.questCompleted = true;
+    saveGameState();
+    
+    // Cacher le bouton Réclamer
+    document.getElementById('claim-quest-btn').style.display = 'none';
+    
+    // Afficher le coffre
+    document.getElementById('quest-reward').style.display = 'block';
+    
+    // Animation d'ouverture du coffre après 1 seconde
+    setTimeout(() => {
+        openChest();
+    }, 1000);
 }
 
 // Ouvrir le coffre
 function openChest() {
     if (gameState.chestOpened) return;
     
-    gameState.chestOpened = true;
-    gameState.energy += 50;
-    gameState.metal += 20;
+    const chestBox = document.getElementById('chest-box');
     
-    updateDisplay();
-    
-    alert('🎉 Coffre ouvert!\n⚡ +50 Énergie\n🔩 +20 Métal');
-    
-    // Faire disparaître le coffre
-    const questReward = document.getElementById('quest-reward');
-    if (questReward) {
-        questReward.innerHTML = '<p style="color: #00ff88;">✅ Récompense récupérée!</p>';
+    // Animation d'ouverture
+    if (chestBox) {
+        chestBox.classList.add('chest-opening');
     }
+    
+    // Après l'animation, donner les récompenses
+    setTimeout(() => {
+        gameState.chestOpened = true;
+        gameState.energy += 50;
+        gameState.metal += 20;
+        
+        updateDisplay();
+        
+        // Afficher les récompenses
+        document.getElementById('quest-reward').style.display = 'none';
+        document.getElementById('chest-opened').style.display = 'block';
+    }, 1500);
 }
 
 // Initialiser le jeu au chargement
 window.addEventListener('load', () => {
     loadGameState();
 });
+
+// Acheter du bouclier
+function buyShield() {
+    const messageEl = document.getElementById('defense-message');
+    const buyBtn = document.getElementById('buy-shield-btn');
+    const constructionEl = document.getElementById('defense-construction');
+    const timerEl = document.getElementById('defense-timer');
+    
+    if (gameState.metal >= 40) {
+        gameState.metal -= 40;
+        updateDisplay();
+        
+        buyBtn.disabled = true;
+        buyBtn.style.opacity = '0.5';
+        constructionEl.style.display = 'block';
+        messageEl.textContent = '';
+        
+        let countdown = 5;
+        timerEl.textContent = countdown;
+        
+        const interval = setInterval(() => {
+            countdown--;
+            timerEl.textContent = countdown;
+            
+            if (countdown <= 0) {
+                clearInterval(interval);
+                
+                gameState.shield += 20;
+                updateDisplay();
+                
+                buyBtn.disabled = false;
+                buyBtn.style.opacity = '1';
+                constructionEl.style.display = 'none';
+                
+                messageEl.textContent = '✅ Bouclier amélioré! +20% (Total: ' + gameState.shield + '%)';
+                messageEl.style.color = '#00ff88';
+            }
+        }, 1000);
+    } else {
+        messageEl.textContent = '❌ Pas assez de métal! (40 métal requis)';
+        messageEl.style.color = '#ff0000';
+    }
+}
+
+// Acheter du bouclier
+function buyShield() {
+    const messageEl = document.getElementById('defense-message');
+    const buyBtn = document.getElementById('buy-shield-btn');
+    const constructionEl = document.getElementById('defense-construction');
+    const timerEl = document.getElementById('defense-timer');
+    
+    if (gameState.metal >= 40) {
+        gameState.metal -= 40;
+        updateDisplay();
+        
+        buyBtn.disabled = true;
+        buyBtn.style.opacity = '0.5';
+        constructionEl.style.display = 'block';
+        messageEl.textContent = '';
+        
+        let countdown = 5;
+        timerEl.textContent = countdown;
+        
+        const interval = setInterval(() => {
+            countdown--;
+            timerEl.textContent = countdown;
+            
+            if (countdown <= 0) {
+                clearInterval(interval);
+                
+                gameState.shield += 20;
+                updateDisplay();
+                
+                buyBtn.disabled = false;
+                buyBtn.style.opacity = '1';
+                constructionEl.style.display = 'none';
+                
+                messageEl.textContent = '✅ Bouclier amélioré! +20% (Total: ' + gameState.shield + '%)';
+                messageEl.style.color = '#00ff88';
+            }
+        }, 1000);
+    } else {
+        messageEl.textContent = '❌ Pas assez de métal! (40 métal requis)';
+        messageEl.style.color = '#ff0000';
+    }
+}

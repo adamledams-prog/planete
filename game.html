@@ -12,9 +12,15 @@
         <div class="left-menu">
             <button class="menu-btn" onclick="showSection('planet')">Ma planète</button>
             <button class="menu-btn" onclick="showSection('resources')">Ressources</button>
-            <button class="menu-btn" onclick="showSection('quest')">Quête</button>
+            <button class="menu-btn" onclick="showSection('quest')">
+                Quête
+                <span class="notification-badge" id="quest-badge" style="display: none;">1</span>
+            </button>
             <button class="menu-btn locked" disabled>🔒 Attaque</button>
-            <button class="menu-btn" onclick="showSection('defense')">Défense</button>
+            <button class="menu-btn" onclick="showSection('defense')">
+                Défense
+                <span class="notification-badge" id="defense-badge" style="display: none;">1</span>
+            </button>
             <button class="menu-btn" onclick="showSection('workers')">Travailleurs</button>
             <button class="menu-btn locked" disabled>🔒 Voir une autre planète</button>
         </div>
@@ -40,13 +46,19 @@
                     <h3>🎯 Quête: Première récolte</h3>
                     <p>Objectif: Obtenir 10 métal</p>
                     <p>Progrès: <span id="quest-progress">0</span>/10 métal</p>
+                    <button id="claim-quest-btn" onclick="claimQuest()" style="display: none;" class="claim-btn">Réclamer la récompense</button>
                     <div id="quest-reward" style="display: none;">
                         <p style="color: #00ff88;">✅ Quête terminée!</p>
-                        <div class="chest" onclick="openChest()">
+                        <div class="chest" id="chest-box">
                             <div class="chest-icon">📦</div>
                             <p>Coffre en bois</p>
-                            <p style="font-size: 0.9rem;">Cliquez pour ouvrir</p>
+                            <p style="font-size: 0.9rem;">Ouverture en cours...</p>
                         </div>
+                    </div>
+                    <div id="chest-opened" style="display: none;">
+                        <p style="color: #00ff88; font-size: 1.5rem;">🎉 Coffre ouvert!</p>
+                        <p style="color: #ffd700;">⚡ +50 Énergie</p>
+                        <p style="color: #ffd700;">🔩 +20 Métal</p>
                     </div>
                 </div>
             </div>
@@ -74,8 +86,9 @@
             <!-- Section Défense -->
             <div id="defense" class="section hidden">
                 <h2>Défense</h2>
-                <p>Bouclier actuel: <span id="shield-display">0</span>%</p>
-                <button onclick="upgradeShield()">Améliorer le bouclier (Coût: 200 cristal)</button>
+                <p>🛡️ Bouclier actuel: <span id="shield-display-defense">0</span>%</p>
+                <button onclick="buyShield()" id="buy-shield-btn">Acheter bouclier (Coût: 40 métal) +20% bouclier</button>
+                <p id="defense-construction" style="display: none; color: #ffa500; font-weight: bold;">🔨 En construction... <span id="defense-timer">5</span>s</p>
                 <p id="defense-message"></p>
             </div>
 
@@ -87,7 +100,8 @@
                     <button onclick="hireFreeWorker()" id="free-worker-btn">Embaucher 1er travailleur (Gratuit - 0$)</button>
                     <p id="worker-timer" style="display: none;">Attente: <span id="timer-seconds">5</span>s...</p>
                 </div>
-                <button onclick="hireWorker()" style="display: none;" id="regular-worker-btn">Embaucher travailleur (Coût: 50 métal)</button>
+                <button onclick="hireWorker()" style="display: none;" id="regular-worker-btn">Embaucher travailleur (Coût: 50 énergie)</button>
+                <p id="worker-timer-regular" style="display: none;">Attente: <span id="timer-seconds-regular">5</span>s...</p>
                 <p id="worker-message"></p>
             </div>
 
