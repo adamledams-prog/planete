@@ -7,7 +7,12 @@ let gameState = {
     workers: 0,
     questCompleted: false,
     chestOpened: false,
-    defenseUnlocked: false
+    defenseUnlocked: false,
+    quest2Completed: false,
+    chest2Opened: false,
+    attackUnlocked: false,
+    quest2Visible: false,
+    questBadgeClicked: false
 };
 
 // Charger l'état du jeu
@@ -56,6 +61,14 @@ function updateDisplay() {
         }
     }
     
+    // Mettre à jour le badge d'attaque
+    const attackBadge = document.getElementById('attack-badge');
+    if (attackBadge && gameState.attackUnlocked) {
+        attackBadge.style.display = 'inline-block';
+    } else if (attackBadge) {
+        attackBadge.style.display = 'none';
+    }
+    
     // Mettre à jour la quête
     updateQuest();
     
@@ -77,6 +90,25 @@ function showSection(sectionName) {
         const targetSection = document.getElementById(sectionName);
         if (targetSection) {
             targetSection.classList.remove('hidden');
+        }
+        
+        // Si on ouvre la section quête, masquer le badge
+        if (sectionName === 'quest') {
+            gameState.questBadgeClicked = true;
+            const questBadge = document.getElementById('quest-badge');
+            if (questBadge) {
+                questBadge.style.display = 'none';
+            }
+        }
+        
+        // Si on ouvre la section attaque, masquer le badge
+        if (sectionName === 'attack') {
+            const attackBadge = document.getElementById('attack-badge');
+            if (attackBadge) {
+                attackBadge.style.display = 'none';
+            }
+            gameState.attackUnlocked = false;
+            saveGameState();
         }
     } else {
         planetView.style.display = 'block';
@@ -249,8 +281,10 @@ function updateQuest() {
     }
     
     // Afficher le badge de notification si on a 10 métal et que la quête n'est pas complétée
-    if (questBadge) {
+    if (questBadge && !gameState.questBadgeClicked) {
         if (gameState.metal >= 10 && !gameState.questCompleted && !gameState.chestOpened) {
+            questBadge.style.display = 'inline-block';
+        } else if (gameState.quest2Visible && !gameState.quest2Completed && gameState.shield >= 20) {
             questBadge.style.display = 'inline-block';
         } else {
             questBadge.style.display = 'none';
@@ -269,6 +303,45 @@ function updateQuest() {
     if (chestOpened && gameState.chestOpened) {
         document.getElementById('quest-reward').style.display = 'none';
         chestOpened.style.display = 'block';
+    }
+    
+    // Quête 2: Protection planétaire
+    const questBox2 = document.getElementById('quest-box-2');
+    const questProgress2 = document.getElementById('quest-progress-2');
+    const claimBtn2 = document.getElementById('claim-quest-btn-2');
+    
+    // Afficher la quête 2 si la première est terminée
+    if (questBox2 && gameState.chestOpened && !gameState.quest2Visible) {
+        gameState.quest2Visible = true;
+        questBox2.style.display = 'block';
+        saveGameState();
+    }
+    
+    if (questProgress2) {
+        questProgress2.textContent = Math.min(gameState.shield, 20);
+    }
+    
+    // Afficher le bouton Réclamer pour la quête 2
+    if (claimBtn2 && gameState.shield >= 20 && !gameState.quest2Completed && !gameState.chest2Opened && gameState.quest2Visible) {
+        claimBtn2.style.display = 'block';
+    } else if (claimBtn2) {
+        claimBtn2.style.display = 'none';
+    }
+    
+    // Afficher l'état final si le coffre 2 a été ouvert
+    const chestOpened2 = document.getElementById('chest-opened-2');
+    if (chestOpened2 && gameState.chest2Opened) {
+        document.getElementById('quest-reward-2').style.display = 'none';
+        chestOpened2.style.display = 'block';
+        
+        // Débloquer l'attaque
+        const attackLockedBtn = document.getElementById('attack-locked-btn');
+        const attackMenuBtn = document.getElementById('attack-menu-btn');
+        if (attackLockedBtn && attackMenuBtn) {
+            attackLockedBtn.style.display = 'none';
+            attackMenuBtn.style.display = 'block';
+            gameState.attackUnlocked = true;
+        }
     }
 }
 
@@ -321,47 +394,57 @@ window.addEventListener('load', () => {
     loadGameState();
 });
 
-// Acheter du bouclier
-function buyShield() {
-    const messageEl = document.getElementById('defense-message');
-    const buyBtn = document.getElementById('buy-shield-btn');
-    const constructionEl = document.getElementById('defense-construction');
-    const timerEl = document.getElementById('defense-timer');
+// Réclamer la quête 2
+function claimQuest2() {
+    if (gameState.shield < 20 || gameState.quest2Completed) return;
     
-    if (gameState.metal >= 40) {
-        gameState.metal -= 40;
+    gameState.quest2Completed = true;
+    gameState.questBadgeClicked = false;
+    saveGameState();
+    
+    // Cacher le bouton Réclamer
+    document.getElementById('claim-quest-btn-2').style.display = 'none';
+    
+    // Afficher le coffre
+    document.getElementById('quest-reward-2').style.display = 'block';
+    
+    // Animation d'ouverture du coffre après 1 seconde
+    setTimeout(() => {
+        openChest2();
+    }, 1000);
+}
+
+// Ouvrir le coffre 2
+function openChest2() {
+    if (gameState.chest2Opened) return;
+    
+    const chestBox = document.getElementById('chest-box-2');
+    
+    // Animation d'ouverture
+    if (chestBox) {
+        chestBox.classList.add('chest-opening');
+    }
+    
+    // Après l'animation, donner les récompenses
+    setTimeout(() => {
+        gameState.chest2Opened = true;
+        gameState.energy += 100;
+        gameState.attackUnlocked = true;
+        
         updateDisplay();
         
-        buyBtn.disabled = true;
-        buyBtn.style.opacity = '0.5';
-        constructionEl.style.display = 'block';
-        messageEl.textContent = '';
+        // Afficher les récompenses
+        document.getElementById('quest-reward-2').style.display = 'none';
+        document.getElementById('chest-opened-2').style.display = 'block';
         
-        let countdown = 5;
-        timerEl.textContent = countdown;
-        
-        const interval = setInterval(() => {
-            countdown--;
-            timerEl.textContent = countdown;
-            
-            if (countdown <= 0) {
-                clearInterval(interval);
-                
-                gameState.shield += 20;
-                updateDisplay();
-                
-                buyBtn.disabled = false;
-                buyBtn.style.opacity = '1';
-                constructionEl.style.display = 'none';
-                
-                messageEl.textContent = '✅ Bouclier amélioré! +20% (Total: ' + gameState.shield + '%)';
-                messageEl.style.color = '#00ff88';
-            }
-        }, 1000);
-    } else {
-        messageEl.textContent = '❌ Pas assez de métal! (40 métal requis)';
-        messageEl.style.color = '#ff0000';
-    }
+        // Débloquer l'attaque
+        const attackLockedBtn = document.getElementById('attack-locked-btn');
+        const attackMenuBtn = document.getElementById('attack-menu-btn');
+        if (attackLockedBtn && attackMenuBtn) {
+            attackLockedBtn.style.display = 'none';
+            attackMenuBtn.style.display = 'block';
+        }
+    }, 1500);
 }
 
 // Acheter du bouclier
@@ -391,6 +474,15 @@ function buyShield() {
                 clearInterval(interval);
                 
                 gameState.shield += 20;
+                
+                // Afficher le badge de quête si on atteint 20% et que la quête 2 est visible
+                if (gameState.shield >= 20 && gameState.quest2Visible && !gameState.quest2Completed) {
+                    const questBadge = document.getElementById('quest-badge');
+                    if (questBadge) {
+                        questBadge.style.display = 'inline-block';
+                    }
+                }
+                
                 updateDisplay();
                 
                 buyBtn.disabled = false;

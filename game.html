@@ -16,7 +16,8 @@
                 Quête
                 <span class="notification-badge" id="quest-badge" style="display: none;">1</span>
             </button>
-            <button class="menu-btn locked" disabled>🔒 Attaque</button>
+            <button class="menu-btn" id="attack-menu-btn" onclick="showSection('attack')" style="display: none;">Attaque</button>
+            <button class="menu-btn locked" id="attack-locked-btn" disabled>🔒 Attaque</button>
             <button class="menu-btn" onclick="showSection('defense')">
                 Défense
                 <span class="notification-badge" id="defense-badge" style="display: none;">1</span>
@@ -42,7 +43,8 @@
             <!-- Section Quête -->
             <div id="quest" class="section hidden">
                 <h2>Quêtes</h2>
-                <div class="quest-box">
+                <!-- Quête 1: Première récolte -->
+                <div class="quest-box" id="quest-box-1">
                     <h3>🎯 Quête: Première récolte</h3>
                     <p>Objectif: Obtenir 10 métal</p>
                     <p>Progrès: <span id="quest-progress">0</span>/10 métal</p>
@@ -59,6 +61,26 @@
                         <p style="color: #00ff88; font-size: 1.5rem;">🎉 Coffre ouvert!</p>
                         <p style="color: #ffd700;">⚡ +50 Énergie</p>
                         <p style="color: #ffd700;">🔩 +20 Métal</p>
+                    </div>
+                </div>
+                <!-- Quête 2: Protection planétaire -->
+                <div class="quest-box" id="quest-box-2" style="display: none;">
+                    <h3>🎯 Quête: Protection planétaire</h3>
+                    <p>Objectif: Obtenir 20% de bouclier</p>
+                    <p>Progrès: <span id="quest-progress-2">0</span>/20% bouclier</p>
+                    <button id="claim-quest-btn-2" onclick="claimQuest2()" style="display: none;" class="claim-btn">Réclamer la récompense</button>
+                    <div id="quest-reward-2" style="display: none;">
+                        <p style="color: #00ff88;">✅ Quête terminée!</p>
+                        <div class="chest" id="chest-box-2">
+                            <div class="chest-icon">⚔️</div>
+                            <p>Coffre d'attaque</p>
+                            <p style="font-size: 0.9rem;">Ouverture en cours...</p>
+                        </div>
+                    </div>
+                    <div id="chest-opened-2" style="display: none;">
+                        <p style="color: #00ff88; font-size: 1.5rem;">🎉 Coffre ouvert!</p>
+                        <p style="color: #ffd700;">🔓 Attaque débloquée!</p>
+                        <p style="color: #ffd700;">⚡ +100 Énergie</p>
                     </div>
                 </div>
             </div>
